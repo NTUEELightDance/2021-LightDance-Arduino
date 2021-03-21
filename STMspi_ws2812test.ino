@@ -32,14 +32,13 @@ void setupSPI(void)
   // The clock value is not used
   // SPI1 is selected by default
   // MOSI, MISO, SCK and NSS PINs are set by the library
-  SPI.beginTransactionSlave(SPISettings(18000000, MSBFIRST, SPI_MODE0, DATA_SIZE_8BIT));
+  SPI.beginTransactionSlave(SPISettings(1125000, MSBFIRST, SPI_MODE0, DATA_SIZE_8BIT));
 }
 
 uint8_t count = 0;
 void setup()
 {
-  Serial1.begin(115200);
-  Serial1.println("Start!");
+  pinMode(LED_BUILTIN, OUTPUT);
   strips[0] = strip_0;
   strips[1] = strip_1;
   strips[2] = strip_2;
@@ -58,21 +57,25 @@ void setup()
   {
       for (uint16_t j = 0; j < NUM_LEDS[i]; ++j)
       {
-          strips[i][j].setRGB(0,0,0);
+          strips[i][j].setRGB(20,20,20);
       }
   }
   FastLED.show();
   setupSPI();
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 void loop()
 {
   // Blocking call to read SPI message
   SPI.transfer(stripInfo,2);
   uint8_t ID = stripInfo[0];
+  if(ID == 0){
+    digitalWrite(LED_BUILTIN, LOW);
+  }
   SPI.transfer(buf, NUM_LEDS[ID] * 3+2);
   for (uint16_t i = 0; i < NUM_LEDS[ID]; ++i) // send pixel data to LED
     {   
-        strips[ID][i].setRGB(buf[3 * i + DATA_OFFSET], buf[3 * i + DATA_OFFSET + 1], buf[3 * i + DATA_OFFSET + 2]);
+      strips[ID][i].setRGB(buf[3 * i + DATA_OFFSET], buf[3 * i + DATA_OFFSET + 1], buf[3 * i + DATA_OFFSET + 2]);
     }
     FastLED.show(); // render
 }
